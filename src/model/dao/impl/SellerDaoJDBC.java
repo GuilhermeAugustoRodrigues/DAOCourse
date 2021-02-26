@@ -1,5 +1,6 @@
 package model.dao.impl;
 
+import com.mysql.jdbc.Statement;
 import db.DbException;
 import model.dao.SellerDao;
 import model.entities.Department;
@@ -19,12 +20,36 @@ public class SellerDaoJDBC implements SellerDao {
     }
 
     @Override
-    public void insert(Seller department) {
-
+    public void insert(Seller seller) {
+        try {
+            String name = seller.getName();
+            String email = seller.getEmail();
+            long birthDate = seller.getBirthDate().getTime();
+            double baseSalary = seller.getBaseSalary();
+            int departmentId = seller.getDepartment().getId();
+            PreparedStatement preparedStatement = connection.prepareStatement("insert into seller (name, email, " +
+                    "birthDate, baseSalary, departmentId) values (?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+            preparedStatement.setString(1, name);
+            preparedStatement.setString(2, email);
+            preparedStatement.setDate(3, new java.sql.Date(birthDate));
+            preparedStatement.setDouble(4, baseSalary);
+            preparedStatement.setInt(5, departmentId);
+            if (preparedStatement.executeUpdate() > 0) {
+                ResultSet resultSet = preparedStatement.getGeneratedKeys();
+                if (resultSet.next()) {
+                    int id = resultSet.getInt(1);
+                    seller.setId(id);
+                }
+            } else {
+                throw new DbException("Unexpected error. No update executed.");
+            }
+        } catch (SQLException error) {
+            throw new DbException(error.getMessage());
+        }
     }
 
     @Override
-    public void update(Seller department) {
+    public void update(Seller seller) {
 
     }
 
@@ -36,12 +61,12 @@ public class SellerDaoJDBC implements SellerDao {
     @Override
     public Seller getById(Integer id) {
         try {
-            PreparedStatement request = connection.prepareStatement("select seller.*, dep.name as departmentName " +
+            PreparedStatement preparedStatement = connection.prepareStatement("select seller.*, dep.name as departmentName " +
                     "from seller " +
                     "left join department dep on seller.departmentId = dep.id " +
                     "where seller.id = ?");
-            request.setInt(1, id);
-            ResultSet result = request.executeQuery();
+            preparedStatement.setInt(1, id);
+            ResultSet result = preparedStatement.executeQuery();
             if (result.next()) {
                 return instantiateSeller(result, instantiateDepartment(result));
             }
@@ -54,13 +79,13 @@ public class SellerDaoJDBC implements SellerDao {
     @Override
     public List<Seller> getSellerByDepartment(Department department) {
         try {
-            PreparedStatement request = connection.prepareStatement("select seller.*, dep.name as departmentName " +
+            PreparedStatement preparedStatement = connection.prepareStatement("select seller.*, dep.name as departmentName " +
                     "from seller " +
                     "left join department dep on seller.departmentId = dep.id " +
                     "where dep.id = ? " +
                     "order by seller.name");
-            request.setInt(1, department.getId());
-            ResultSet result = request.executeQuery();
+            preparedStatement.setInt(1, department.getId());
+            ResultSet result = preparedStatement.executeQuery();
             List<Seller> sellers = new ArrayList<>();
             Map<Integer, Department> departmentMap = new HashMap<>();
             while (result.next()) {
@@ -80,11 +105,11 @@ public class SellerDaoJDBC implements SellerDao {
     @Override
     public List<Seller> getAllSellers() {
         try {
-            PreparedStatement request = connection.prepareStatement("select seller.*, dep.name as departmentName " +
+            PreparedStatement preparedStatement = connection.prepareStatement("select seller.*, dep.name as departmentName " +
                     "from seller " +
                     "left join department dep on seller.departmentId = dep.id " +
                     "order by seller.name");
-            ResultSet result = request.executeQuery();
+            ResultSet result = preparedStatement.executeQuery();
             List<Seller> sellers = new ArrayList<>();
             Map<Integer, Department> departmentMap = new HashMap<>();
             Department department;
