@@ -13,7 +13,7 @@ import java.sql.SQLException;
 import java.util.*;
 
 public class SellerDaoJDBC implements SellerDao {
-    private Connection connection;
+    private final Connection connection;
 
     public SellerDaoJDBC(Connection connection) {
         this.connection = connection;

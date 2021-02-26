@@ -9,5 +9,5 @@ public interface DepartmentDao {
     void update(Department department);
     void deleteById(Integer id);
     Department getById(Integer id);
-    List<Department> getDepartments();
+    List<Department> getAll();
 }
