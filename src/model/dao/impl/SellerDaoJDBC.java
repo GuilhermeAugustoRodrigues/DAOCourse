@@ -50,12 +50,37 @@ public class SellerDaoJDBC implements SellerDao {
 
     @Override
     public void update(Seller seller) {
-
+        try {
+            String name = seller.getName();
+            String email = seller.getEmail();
+            long birthDate = seller.getBirthDate().getTime();
+            double baseSalary = seller.getBaseSalary();
+            int departmentId = seller.getDepartment().getId();
+            int sellerId = seller.getId();
+            PreparedStatement preparedStatement = connection.prepareStatement("update seller set " +
+                            "name = ?, email = ?, birthDate = ?, baseSalary = ?, departmentId = ? " +
+                            "where id = ?");
+            preparedStatement.setString(1, name);
+            preparedStatement.setString(2, email);
+            preparedStatement.setDate(3, new java.sql.Date(birthDate));
+            preparedStatement.setDouble(4, baseSalary);
+            preparedStatement.setInt(5, departmentId);
+            preparedStatement.setInt(6, sellerId);
+            preparedStatement.executeUpdate();
+        } catch (SQLException error) {
+            throw new DbException(error.getMessage());
+        }
     }
 
     @Override
     public void deleteById(Integer id) {
-
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement("delete from seller where id = ?");
+            preparedStatement.setInt(1, id);
+            preparedStatement.executeUpdate();
+        } catch (SQLException error) {
+            throw new DbException(error.getMessage());
+        }
     }
 
     @Override
@@ -77,7 +102,7 @@ public class SellerDaoJDBC implements SellerDao {
     }
 
     @Override
-    public List<Seller> getSellerByDepartment(Department department) {
+    public List<Seller> getByDepartment(Department department) {
         try {
             PreparedStatement preparedStatement = connection.prepareStatement("select seller.*, dep.name as departmentName " +
                     "from seller " +
@@ -103,7 +128,7 @@ public class SellerDaoJDBC implements SellerDao {
     }
 
     @Override
-    public List<Seller> getAllSellers() {
+    public List<Seller> getAll() {
         try {
             PreparedStatement preparedStatement = connection.prepareStatement("select seller.*, dep.name as departmentName " +
                     "from seller " +
