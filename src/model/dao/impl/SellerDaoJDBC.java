@@ -9,8 +9,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 public class SellerDaoJDBC implements SellerDao {
     private Connection connection;
@@ -47,6 +46,32 @@ public class SellerDaoJDBC implements SellerDao {
                 return instantiateSeller(result, instantiateDepartment(result));
             }
             return null;
+        } catch (SQLException error) {
+            throw new DbException(error.getMessage());
+        }
+    }
+
+    @Override
+    public List<Seller> getByDepartment(Department department) {
+        try {
+            PreparedStatement request = connection.prepareStatement("select seller.*, dep.name as departmentName " +
+                    "from seller " +
+                    "left join department dep on seller.departmentId = dep.id " +
+                    "where dep.id = ? " +
+                    "order by seller.name");
+            request.setInt(1, department.getId());
+            ResultSet result = request.executeQuery();
+            List<Seller> sellers = new ArrayList<>();
+            Map<Integer, Department> departmentMap = new HashMap<>();
+            while (result.next()) {
+                department = departmentMap.get(result.getInt("departmentId"));
+                if (department == null) {
+                    department = instantiateDepartment(result);
+                    departmentMap.put(department.getId(), department);
+                }
+                sellers.add(instantiateSeller(result, department));
+            }
+            return sellers;
         } catch (SQLException error) {
             throw new DbException(error.getMessage());
         }
