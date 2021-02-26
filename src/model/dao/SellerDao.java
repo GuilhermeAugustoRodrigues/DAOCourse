@@ -10,6 +10,6 @@ public interface SellerDao {
     void update(Seller department);
     void deleteById(Integer id);
     Seller getById(Integer id);
-    List<Seller> getByDepartment(Department department);
-    List<Seller> getSellers();
+    List<Seller> getSellerByDepartment(Department department);
+    List<Seller> getAllSellers();
 }

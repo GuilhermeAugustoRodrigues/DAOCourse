@@ -52,7 +52,7 @@ public class SellerDaoJDBC implements SellerDao {
     }
 
     @Override
-    public List<Seller> getByDepartment(Department department) {
+    public List<Seller> getSellerByDepartment(Department department) {
         try {
             PreparedStatement request = connection.prepareStatement("select seller.*, dep.name as departmentName " +
                     "from seller " +
@@ -78,8 +78,28 @@ public class SellerDaoJDBC implements SellerDao {
     }
 
     @Override
-    public List<Seller> getSellers() {
-        return null;
+    public List<Seller> getAllSellers() {
+        try {
+            PreparedStatement request = connection.prepareStatement("select seller.*, dep.name as departmentName " +
+                    "from seller " +
+                    "left join department dep on seller.departmentId = dep.id " +
+                    "order by seller.name");
+            ResultSet result = request.executeQuery();
+            List<Seller> sellers = new ArrayList<>();
+            Map<Integer, Department> departmentMap = new HashMap<>();
+            Department department;
+            while (result.next()) {
+                department = departmentMap.get(result.getInt("departmentId"));
+                if (department == null) {
+                    department = instantiateDepartment(result);
+                    departmentMap.put(department.getId(), department);
+                }
+                sellers.add(instantiateSeller(result, department));
+            }
+            return sellers;
+        } catch (SQLException error) {
+            throw new DbException(error.getMessage());
+        }
     }
 
     private Seller instantiateSeller(ResultSet result, Department department) throws SQLException {
